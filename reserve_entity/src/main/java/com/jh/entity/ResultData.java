@@ -18,7 +18,11 @@ public class ResultData<T> implements Serializable {
     private T data;
 
     public static interface Code{
+        //请求成功处理并返回
         int OK = 200;
+        //请求错误
         int ERROR = 300;
+        //成功登录
+        int TOLOGIN=555;
     }
 }

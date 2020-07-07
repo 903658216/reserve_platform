@@ -1,18 +1,22 @@
 package com.jh.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jh.dao.HotelMapper;
 import com.jh.entity.City;
 import com.jh.entity.Hotel;
 import com.jh.entity.ResultData;
+import com.jh.entity.Room;
 import com.jh.event.constant.EventConstant;
 import com.jh.event.util.EventUtil;
 import com.jh.feign.CityFeign;
 import com.jh.service.IHotelService;
+import com.jh.service.IRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.List;
 
 
@@ -24,6 +28,11 @@ public class IHotelServiceImpl extends ServiceImpl<HotelMapper, Hotel> implement
 
     @Autowired
     private CityFeign cityFeign;
+
+    @Autowired
+    private  IRoomService iRoomService;
+
+
 
     @Autowired
     private EventUtil eventUtil;
@@ -82,5 +91,30 @@ public class IHotelServiceImpl extends ServiceImpl<HotelMapper, Hotel> implement
         });
 
         return hotelList;
+    }
+
+    /**
+     * 根据酒店编号查询酒店信息
+     * @param id
+     * @return
+     */
+    @Override
+    public Hotel getById(Serializable id) {
+        Hotel hotel = super.getById(id);
+
+        //获得酒店对应的城市id
+        Integer cid = hotel.getCid();
+        ResultData<City> cityResultData = cityFeign.selectCityById(cid);
+        //设置城市对象
+        hotel.setCity(cityResultData.getData());
+
+        //获得客房信息
+        QueryWrapper wrapper = new QueryWrapper<>()
+                .eq("hid",hotel.getId());
+        List<Room> roomList = iRoomService.list(wrapper);
+        hotel.setRoomList(roomList);
+
+        return hotel;
+
     }
 }

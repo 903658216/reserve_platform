@@ -1,7 +1,6 @@
 package com.jh.controller;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jh.entity.Hotel;
 import com.jh.entity.ResultData;
 import com.jh.service.IHotelService;
@@ -56,6 +55,18 @@ public class HotelController {
     ResultData<Hotel> selectHotelById(@RequestBody Integer id){
 
         Hotel hotel = iHotelService.getById(id);
+        return new  ResultData<Hotel>().setData(hotel);
+    }
+
+    /**
+     * 根据编号查询酒店信息
+     * @param hid
+     * @return
+     */
+    @RequestMapping("/getHotelById")
+    ResultData<Hotel> getHotelById(Integer hid){
+
+        Hotel hotel = iHotelService.getById(hid);
         return new  ResultData<Hotel>().setData(hotel);
     }
 

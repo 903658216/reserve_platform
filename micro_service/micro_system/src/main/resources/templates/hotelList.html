@@ -27,7 +27,7 @@
         <th>地址</th>
         <th>所在城市(行政区域)</th>
         <th>品牌</th>
-        <th>开业时间</th>
+<!--        <th>开业时间</th>-->
         <th th:cols="3">操作</th>
     </tr>
     </thead>
@@ -40,7 +40,8 @@
         <td th:text="${h.address}">地址</td>
         <td th:if="${c.id eq h.cid}" th:each="c:${cityList}" th:text="${c.cityName}+'('+${h.district}+')'">所在城市</td>
         <td th:text="${h.brand}">品牌</td>
-        <td th:text="${#dates.format(h.openTime,'yyyy-MM-dd')}">开业时间</td>
+<!--        <td th:text="${#dates.format(h.openTime,'yyyy-MM-dd')}">开业时间</td>-->
+<!--        <td th:text="${h.openTime}">开业时间</td>-->
         <td th:cols="3">
 <!--            <a th:href="|/citySystem/toCityUpdate?id=${c.id}|">修改</a>-->
             <a th:href="|/hotelSystem/toUpdateHotel?id=${h.id}|">修改酒店</a>

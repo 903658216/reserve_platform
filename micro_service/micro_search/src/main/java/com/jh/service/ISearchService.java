@@ -4,7 +4,10 @@ package com.jh.service;
 import com.jh.entity.Hotel;
 import com.jh.entity.Room;
 import com.jh.entity.RoomPrice;
+import com.jh.entity.SearchInfo;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
 
 import java.util.List;
 import java.util.Map;
@@ -78,5 +81,14 @@ public interface ISearchService {
      * @param queryBuilder
      * @return
      */
-    List<Hotel> search(QueryBuilder queryBuilder);
+    List<Hotel> search(QueryBuilder queryBuilder, List<SortBuilder> sort, ScriptField... scriptFields);
+//    List<Hotel> search(QueryBuilder queryBuilder, ScriptField... scriptFields);
+
+
+    /**
+     * 根据客户端的请求数据进行搜索符合要求的酒店
+     * @param searchInfo 搜索信息实体类
+     * @return
+     */
+    List<Hotel> searchByKeyword(SearchInfo searchInfo);
 }

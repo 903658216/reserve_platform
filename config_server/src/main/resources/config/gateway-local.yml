@@ -18,3 +18,11 @@ spring:
           uri: lb://micro-system
           predicates:
             - Path=/system/**,/citySystem/**,/hotelSystem/**
+        - id: search
+          uri: lb://micro-search
+          predicates:
+            - Path=/search/**
+        - id: user
+          uri: lb://micro-user
+          predicates:
+            - Path=/user/**

@@ -3,23 +3,25 @@ package com.jh.service.impl;
 import com.jh.entity.Hotel;
 import com.jh.entity.Room;
 import com.jh.entity.RoomPrice;
+import com.jh.entity.SearchInfo;
 import com.jh.feign.HotelFeign;
 import com.jh.service.ISearchService;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.*;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.search.sort.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -242,9 +244,23 @@ public class SearchServiceImpl implements ISearchService {
      * @return
      */
     @Override
-    public List<Hotel> search(QueryBuilder queryBuilder) {
+    public List<Hotel> search(QueryBuilder queryBuilder , List<SortBuilder> sort, ScriptField... scriptFields) {
         //本地（索引库）搜索查询
-        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder);
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder,null,sort);
+
+        //处理脚本的自定义字段
+        if (scriptFields!= null){
+            //设置自定义字段
+            nativeSearchQuery.addScriptField(scriptFields);
+            //设置显示的字段
+            String [] exclued = {"roomList","openTime"};
+            nativeSearchQuery.addSourceFilter(new FetchSourceFilter(null,exclued));
+
+        }
+
+
+
+
         //进行分页的设置
 //        PageRequest pageRequest = PageRequest.of(0,2);
 //        nativeSearchQuery.setPageable(pageRequest);
@@ -254,11 +270,11 @@ public class SearchServiceImpl implements ISearchService {
 //        nativeSearchQuery.addSort(Sort.by(Sort.Order.asc("id")));
 
         //设置按照距离排序
-        Sort.Order myLocation = new GeoDistanceOrder("myLocation",new GeoPoint(22.625555,113.851466))
-                //根据平面的方式
-                .with(GeoDistanceOrder.DistanceType.plane)
-                //设置单位
-                .withUnit("km");
+//        Sort.Order myLocation = new GeoDistanceOrder("myLocation",new GeoPoint(22.625555,113.851466))
+//                //根据平面的方式
+//                .with(GeoDistanceOrder.DistanceType.plane)
+//                //设置单位
+//                .withUnit("km");
 
         //进行高亮设置
 //        HighlightBuilder highlightBuilder = new HighlightBuilder();
@@ -266,31 +282,209 @@ public class SearchServiceImpl implements ISearchService {
 //        nativeSearchQuery.setHighlightQuery(new HighlightQuery(highlightBuilder));
 
 
+
+
+
         //进行索引查询
         SearchHits<Hotel> hits = restTemplate.search(nativeSearchQuery,Hotel.class);
-        //总共命中了几个记录
-        long total = hits.getTotalHits();
-        System.out.println("符合本次查询的文档总共有："+total+"个");
-        //查询结果中，最高评分是
-        float maxScore = hits.getMaxScore();
-        System.out.println("本次查询中，最高文档的评分是："+maxScore);
+//        //总共命中了几个记录
+//        long total = hits.getTotalHits();
+//        System.out.println("符合本次查询的文档总共有："+total+"个");
+//        //查询结果中，最高评分是
+//        float maxScore = hits.getMaxScore();
+//        System.out.println("本次查询中，最高文档的评分是："+maxScore);
 
 
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
         List<Hotel> hotelList = new ArrayList<>();
         hits.getSearchHits().stream().forEach( hotelSearchHit -> {
 
             //hotel的查询结果为
-            String id =hotelSearchHit.getId();
+//            String id =hotelSearchHit.getId();
+//            Hotel hotel = hotelSearchHit.getContent();
+//
+//            List<Object> sortValues = hotelSearchHit.getSortValues();
+//            System.out.println("排序的字段为:"+sortValues);
+//
+//            List<String> hotelName =hotelSearchHit.getHighlightField("hotelName");
+//            hotel.setHotelName(hotelName !=null && hotelName.size() > 0 ? hotelName.get(0) : hotel.getHotelName());
+//            hotelList.add(hotel);
+
             Hotel hotel = hotelSearchHit.getContent();
+            if(hotel.getAvgPrice() > 0){
 
-            List<Object> sortValues = hotelSearchHit.getSortValues();
-            System.out.println("排序的字段为:"+sortValues);
+                //手动格式化价格和距离
+                hotel.setAvgPrice(Double.parseDouble(decimalFormat.format(hotel.getAvgPrice())));
+                hotel.setDistance(Double.parseDouble(decimalFormat.format(hotel.getDistance())));
 
-            List<String> hotelName =hotelSearchHit.getHighlightField("hotelName");
-            hotel.setHotelName(hotelName !=null && hotelName.size() > 0 ? hotelName.get(0) : hotel.getHotelName());
-            hotelList.add(hotel);
+                hotelList.add(hotel);
+            }
         });
 
+        return hotelList;
+    }
+
+    /**
+     * 根据客户端的请求数据进行搜索符合要求的酒店
+     *
+     *  搜索条件逻辑分析
+     *  对于关键字进行着重点分析
+     *   一级权重  -hotelName、keyword、brand、district、roomList.title
+     *   二级权重  - hotelInfo、address
+     *
+     *  时间范围：该酒店在该时间范围内必须满足有客房是空余的
+     *   - 开始入住时间
+     *   - 离店时间
+     *
+     *  价格范围 ：该酒店满足有空余房间的同时，还需要满足该客房在入住期间，客房的平均价格在用户指定的价格期间，
+     *      如果有多个客房同时满足，则选取平均价格最低的一个客房的平均价为返回的价格
+     *   - 最小价格
+     *   - 最大价格
+     *
+     *  位置 ：根据当前用户所定义的经纬度，和酒店的经纬度按照平面距离计算后，返回
+     *
+     * @param searchInfo 搜索信息实体类
+     * @return
+     */
+    @Override
+    public List<Hotel> searchByKeyword(SearchInfo searchInfo){
+
+        //酒店符合查询
+        BoolQueryBuilder hotelQuery = QueryBuilders.boolQuery();
+
+        //匹配时间范围
+        if (searchInfo.getBeginTime() != null && searchInfo.getEndTime() != null) {
+
+            //房间价格表中的时间范围
+            RangeQueryBuilder timeRangeQuery = QueryBuilders.rangeQuery("date")
+                    .gte(searchInfo.getBeginTime())
+                    .lt(searchInfo.getEndTime());
+
+            //判断客房是否已经有预订满的了 -- 脚本查询
+            ScriptQueryBuilder scriptQueryBuilder = QueryBuilders.scriptQuery(new Script("doc['roomList.roomPriceList.number'].value == doc['roomList.roomPriceList.hasNumber'].value"));
+
+            //是否房间价格--有一天已经被预订满了的房间
+            BoolQueryBuilder roomPriceListQuery = QueryBuilders.boolQuery()
+                    .must(timeRangeQuery)
+                    .must(scriptQueryBuilder);
+
+            //房间价格的嵌套查询
+            NestedQueryBuilder roomPriceListNestedQuery = QueryBuilders.nestedQuery("roomList.roomPriceList", roomPriceListQuery, ScoreMode.Avg);
+
+            //客房列表的查询
+            BoolQueryBuilder roomListBooleanQuery = QueryBuilders.boolQuery()
+                    .mustNot(roomPriceListNestedQuery);
+
+            //酒店房间的嵌套查询
+            NestedQueryBuilder roomNestedQuery = QueryBuilders.nestedQuery("roomList", roomListBooleanQuery, ScoreMode.Avg);
+            //时间范围的限制查询
+            hotelQuery.must(roomNestedQuery);
+
+        }
+
+        //关键词查询匹配
+        if (StringUtils.isEmpty(searchInfo.getKeyword())){
+            MultiMatchQueryBuilder keywordQuery = QueryBuilders.multiMatchQuery(searchInfo.getKeyword())
+                    .field("hotelName",5)
+                    .field("hotelName.pinyin")
+                    .field("brand",4)
+                    .field("brand.pinyin")
+                    .field("keyword",3)
+                    .field("keyword.pinyin")
+                    .field("district",3)
+                    .field("district.pinyin");
+            //设置muster
+            hotelQuery.must(keywordQuery);
+        }
+
+        //根据城市查询
+        NestedQueryBuilder cityQuery = QueryBuilders.nestedQuery("city",QueryBuilders.matchQuery("city.cityName",searchInfo.getCityName()),ScoreMode.Avg);
+        //总查询
+        BoostingQueryBuilder execQuery = QueryBuilders.boostingQuery(hotelQuery,cityQuery).negativeBoost(10);
+
+        //===================================
+        //计算符合上述查询的平均价格
+        String script = " double avgPirce = Integer.MAX_VALUE;\n" +
+                "          SimpleDateFormat sdf = new SimpleDateFormat(\"yyyy-MM-dd\");\n" +
+                "          \n" +
+                "          if(params._source.roomList== null || params._source.roomList.length == 0){\n" +
+                "            return -1;\n" +
+                "          }\n" +
+                "          \n" +
+                "          //酒店的房型集合，依次循环所有房型\n" +
+                "          for(r in params._source.roomList) {\n" +
+                "              //当前房型的总价格\n" +
+                "              double roomSumPrice = 0;\n" +
+                "              int days = 0;\n" +
+                "              //找到房型中的所有天数的价格集合\n" +
+                "              for(rp in r.roomPriceList) {\n" +
+                "                  \n" +
+                "                  if(sdf.parse(rp.date).getTime() >= sdf.parse(params.beginTime).getTime() && sdf.parse(rp.date).getTime() < sdf.parse(params.endTime).getTime()) {\n" +
+                "                    \n" +
+                "                      //判断这个酒店在指定范围内是否有一天已经满了\n" +
+                "                      if(rp.number == rp.hasNumber){\n" +
+                "                        roomSumPrice = -1;\n" +
+                "                        break;\n" +
+                "                      }\n" +
+                "                    \n" +
+                "                      roomSumPrice += rp.price;\n" +
+                "                      days++;\n" +
+                "                  }\n" +
+                "              }\n" +
+                "  \n" +
+                "              //结算当前房型的平均价\n" +
+                "              if(roomSumPrice != -1){\n" +
+                "                double roomAvgPirce = roomSumPrice / days;\n" +
+                "                if (roomAvgPirce >= params.minPrice && roomAvgPirce <= params.maxPrice){\n" +
+                "                    avgPirce = Math.min(avgPirce, roomAvgPirce);\n" +
+                "                }\n" +
+                "              }\n" +
+                "          }\n" +
+                "  \n" +
+                "          return avgPirce == Integer.MAX_VALUE ? -1 : avgPirce;";
+
+        //计算酒店与当前定位的距离
+        String script2 = "return doc.myLocation.planeDistance(params.lat,params.lon)/1000;";
+
+        //自定义脚本的参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("beginTime",searchInfo.getBeginTime());
+        params.put("endTime",searchInfo.getEndTime());
+        params.put("minPrice",searchInfo.getMinPrice());
+        params.put("maxPrice",searchInfo.getMaxPrice());
+        params.put("lat",searchInfo.getLat());
+        params.put("lon",searchInfo.getLon());
+
+//        System.out.println("搜索服务接收到的经纬度为："+searchInfo.getLat()+","+searchInfo.getLon());
+
+        //设置自定义字段
+        ScriptField avgPrice = new ScriptField("avgPrice",new Script(ScriptType.INLINE,"painless",script,params));
+
+        //设置距离的自定义字段
+        ScriptField distance = new ScriptField("distance",new Script(ScriptType.INLINE,"painless",script2,params));
+
+
+        //处理排序
+        List<SortBuilder> sortBuilders = new ArrayList<>();
+        switch (searchInfo.getSortType()){
+            case 1:
+                //智能排序
+                break;
+            case 2:
+                //价格排序
+                ScriptSortBuilder priceSortBuilder = SortBuilders.scriptSort(new Script(ScriptType.INLINE,"painless",script,params),ScriptSortBuilder.ScriptSortType.NUMBER).order(SortOrder.ASC);
+                sortBuilders.add(priceSortBuilder);
+                break;
+            case 3:
+                //按照距离排序
+                GeoDistanceSortBuilder geoDistanceSortBuilder = SortBuilders.geoDistanceSort("myLocation",searchInfo.getLat(),searchInfo.getLon()).order(SortOrder.ASC);
+                break;
+        }
+        //执行查询
+        List<Hotel> hotelList = search(execQuery, sortBuilders,avgPrice, distance);
+
+        System.out.println("查询的结果为："+hotelList);
+        //        search();
         return hotelList;
     }
 }
