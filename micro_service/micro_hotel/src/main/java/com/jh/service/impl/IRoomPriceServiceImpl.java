@@ -9,6 +9,7 @@ import com.jh.service.IRoomPriceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -32,6 +33,20 @@ public class IRoomPriceServiceImpl extends ServiceImpl<RoomPriceMapper, RoomPric
     }
 
     /**
+     * 修改酒店客房价格表中，已预订的客房数量
+     * @param rid
+     * @param rNumber
+     * @param beginTime
+     * @param endTime
+     * @return int
+     */
+    @Override
+    public int updateRoomNumber(Integer rid, Integer rNumber, Date beginTime, Date endTime) {
+
+        return roomPriceMapper.updateRoomNumber(rid,rNumber,beginTime,endTime);
+    }
+
+    /**
      * 修改了酒店客房价格表的信息 -- 调整了价格
      * @param roomPrice
      * @return
@@ -44,4 +59,7 @@ public class IRoomPriceServiceImpl extends ServiceImpl<RoomPriceMapper, RoomPric
         eventUtil.publishEvent(EventConstant.EVENT_HOTEL_ROOM_PRICE_UPDATE,roomPrice);
         return flag;
     }
+
+
+
 }

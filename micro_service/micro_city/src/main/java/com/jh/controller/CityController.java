@@ -2,7 +2,6 @@ package com.jh.controller;
 
 import com.jh.entity.City;
 import com.jh.entity.ResultData;
-import com.jh.login.IsLogin;
 import com.jh.service.ICityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +34,11 @@ public class CityController {
 
     /**
      * 城市列表
+     * TODO
      * @return
      */
+//    @IsLogin(mustLogin = true)
     @RequestMapping("/list")
-    @IsLogin(mustLogin = true)
     public ResultData<List<City>> cityList(){
         List<City> list = cityService.list();
         return new ResultData<List<City>>().setData(list);

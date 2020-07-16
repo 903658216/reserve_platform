@@ -2,5 +2,5 @@ spring:
   cloud:
     config:
       uri: http://localhost:40000
-      name: eureka,hotel,datasource,log4j,rabbitmq,myfeign
+      name: eureka,hotel,datasource,log4j,rabbitmq,myfeign,redis
       profile: local

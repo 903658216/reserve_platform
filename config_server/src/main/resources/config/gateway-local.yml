@@ -26,3 +26,7 @@ spring:
           uri: lb://micro-user
           predicates:
             - Path=/user/**
+        - id: order
+          uri: lb://micro-order
+          predicates:
+            - Path=/order/**,/pay/**

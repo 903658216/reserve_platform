@@ -3,6 +3,15 @@
 <mapper namespace="com.jh.dao.RoomPriceMapper">
 
 
+    <!-- -->
+    <update id="updateRoomNumber">
+        <![CDATA[
+            update room_price set number = number + #{rNumber}
+            where rid=#{rid} and date >= #{beginTime} and date < #{endTime}
+        ]]>
+    </update>
+
+
     <select id="selectRoomPriceListByRid" resultType="com.jh.entity.RoomPrice">
         select * from room_price where rid = #{rid}
     </select>

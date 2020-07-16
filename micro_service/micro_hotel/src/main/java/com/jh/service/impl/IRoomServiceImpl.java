@@ -1,5 +1,7 @@
 package com.jh.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jh.dao.RoomMapper;
 import com.jh.entity.Room;
@@ -71,5 +73,28 @@ public class IRoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements I
         List<Room> roomList = roomMapper.selectRoomListByHid(hid);
 
         return roomList;
+    }
+
+
+    /**
+     * 重写mybatis-plus的根据条件构造器查询客房列表的方法
+     * @param queryWrapper
+     * @return
+     */
+    @Override
+    public List<Room> list(Wrapper<Room> queryWrapper) {
+
+        List<Room> roomList = super.list(queryWrapper);
+        //将各个客房的编号，查询其价格信息
+        roomList.stream().forEach(room -> {
+
+            List<RoomPrice> roomPriceList = iRoomPriceService.list(new QueryWrapper<RoomPrice>().eq("rid",room.getId()));
+
+            room.setRoomPriceList(roomPriceList);
+        });
+
+        return roomList;
+
+
     }
 }

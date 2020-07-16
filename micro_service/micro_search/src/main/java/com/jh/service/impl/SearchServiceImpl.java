@@ -23,10 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SearchServiceImpl implements ISearchService {
@@ -227,12 +224,12 @@ public class SearchServiceImpl implements ISearchService {
         //循环遍历，将hotel添加到ES中
         hotelList.forEach(hotel -> {
 
-            List<Room> roomList = hotelFeign.selectRoomListByHid(hotel.getId()).getData();
-            hotel.setRoomList(roomList != null && roomList.size()>0? roomList:hotel.getRoomList());
-           roomList.stream().forEach(room -> {
-               List<RoomPrice> roomPriceList = hotelFeign.selectRoomPriceListByRid(room.getId()).getData();
-               room.setRoomPriceList(roomPriceList != null && roomPriceList.size()>0 ? roomPriceList : room.getRoomPriceList());
-           });
+//            List<Room> roomList = hotelFeign.selectRoomListByHid(hotel.getId()).getData();
+//            hotel.setRoomList(roomList != null && roomList.size()>0? roomList:hotel.getRoomList());
+//           roomList.stream().forEach(room -> {
+//               List<RoomPrice> roomPriceList = hotelFeign.selectRoomPriceListByRid(room.getId()).getData();
+//               room.setRoomPriceList(roomPriceList != null && roomPriceList.size()>0 ? roomPriceList : room.getRoomPriceList());
+//           });
             this.insertDoc(hotel);
         });
 
@@ -486,5 +483,41 @@ public class SearchServiceImpl implements ISearchService {
         System.out.println("查询的结果为："+hotelList);
         //        search();
         return hotelList;
+    }
+
+    /**
+     * 根据订单服务的订单信息来修改elasticSearch中酒店的客房预订数量（指定时间范围）
+     * @param hid
+     * @param rid
+     * @param rNumber
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    @Override
+    public boolean updateRoomNumber(Integer hid, Integer rid, Integer rNumber, Date beginTime, Date endTime) {
+
+        //TODO 根据订单信息修改ES中的酒店客房数量脚本
+        String script = "SimpleDateFormat dfs = new SimpleDateFormat('yyyy-MM-dd');" +
+                "for(r in ctx._source.roomList){" +
+                "if(r.id == params.rid){" +
+                " for(rp in r.roomPriceList) {" +
+                " if(dfs.parse(rp.date).getTime() >= dfs.parse(params.beginTime).getTime() && dfs.parse(rp.date).getTime() < dfs.parse(params.endTime).getTime()){" +
+                " rp.number += params.number " +
+                "}}}}";
+        Map<String,Object> params = new HashMap<>();
+        params.put("rid",rid);
+        params.put("number",rNumber);
+        params.put("beginTime",beginTime);
+        params.put("endTime",endTime);
+        UpdateQuery updateQuery = UpdateQuery.builder(hid+"")
+                .withScript(script)
+                .withParams(params)
+                .build();
+
+        UpdateResponse response = restTemplate.update(updateQuery,IndexCoordinates.of("hotel_index"));
+
+        return true;
+
     }
 }

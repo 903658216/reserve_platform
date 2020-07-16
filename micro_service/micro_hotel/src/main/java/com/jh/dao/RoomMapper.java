@@ -2,9 +2,11 @@ package com.jh.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jh.entity.Room;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface RoomMapper extends BaseMapper<Room> {
 
 

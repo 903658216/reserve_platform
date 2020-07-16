@@ -88,6 +88,15 @@ public class IHotelServiceImpl extends ServiceImpl<HotelMapper, Hotel> implement
             //将城市对象设置到酒店对象中
             hotel.setCity(cityResultData.getData());
 
+
+            //TODO
+            //获得客房信息
+            QueryWrapper wrapper = new QueryWrapper<>()
+                    .eq("hid",hotel.getId());
+            List<Room> roomList = iRoomService.list(wrapper);
+            hotel.setRoomList(roomList);
+
+
         });
 
         return hotelList;
@@ -108,11 +117,13 @@ public class IHotelServiceImpl extends ServiceImpl<HotelMapper, Hotel> implement
         //设置城市对象
         hotel.setCity(cityResultData.getData());
 
+//        Wrapper
         //获得客房信息
         QueryWrapper wrapper = new QueryWrapper<>()
                 .eq("hid",hotel.getId());
         List<Room> roomList = iRoomService.list(wrapper);
         hotel.setRoomList(roomList);
+        System.out.println("根据酒店编号查询到酒店信息"+roomList);
 
         return hotel;
 

@@ -29,5 +29,9 @@ public interface EventConstant {
      * 酒店点击事件
      */
     String EVENT_HOTEL_CLICK="hotel_click";
+    /**
+     * 订单服务中，酒店客房修改事件
+     */
+    String EVENT_HOTEL_ROOM_UPDATE="hotel_room_update";
 
 }

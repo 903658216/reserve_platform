@@ -1,5 +1,6 @@
 package com.jh.util;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -20,5 +21,20 @@ public class DateUtil {
         calendar.add(Calendar.DAY_OF_YEAR,next);
         return calendar.getTime();
 
+    }
+
+    /**
+     * 计算入住的天数
+     * @param beginTime 入住时间
+     * @param endTime   离店时间
+     * @return Integer 住了多少天
+     */
+    public static int getDates(Date beginTime,Date endTime ){
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("DDD");
+        int start = Integer.parseInt(simpleDateFormat.format(beginTime));
+        int end = Integer.parseInt(simpleDateFormat.format(endTime));
+
+        return end-start;
     }
 }

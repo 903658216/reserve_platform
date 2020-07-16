@@ -20,7 +20,9 @@
 		%X{X-B3-ParentSpanId} - 上一个节点id Parent_SpanId
 		%X{X-Span-Export} - 是否被采样
 		-->
-    <property name="LOG_PATTERN" value="%date{yyyy-MM-dd HH:mm:ss.SSS} [%X{X-B3-TraceId}, %X{X-B3-SpanId}, %X{X-B3-ParentSpanId}, %X{X-Span-Export}] [%thread] %-5level %logger{36} - %msg%n" />
+    <property name="LOG_PATTERN"
+              value="%date{yyyy-MM-dd HH:mm:ss.SSS} [%X{X-B3-TraceId},%X{X-B3-SpanId},%X{X-B3-ParentSpanId},%X{X-Span-Export}] [%thread] %highlight{%-5level} %highlight{%c{1.}.%M(%L)} : %msg%n"/>
+<!--              value="%date{yyyy-MM-dd HH:mm:ss.SSS} [%X{X-B3-TraceId}, %X{X-B3-SpanId}, %X{X-B3-ParentSpanId}, %X{X-Span-Export}] [%thread] %-5level %logger{36} - %msg%n" />-->
     <!-- 定义日志存储的路径，不要配置相对路径 -->
     <property name="FILE_PATH" value="D:\worker\logs" />
     <property name="FILE_NAME" value="mylog" />

@@ -9,6 +9,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.query.ScriptField;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -91,4 +92,15 @@ public interface ISearchService {
      * @return
      */
     List<Hotel> searchByKeyword(SearchInfo searchInfo);
+
+    /**
+     * 根据订单服务的订单信息来修改elasticSearch中酒店的客房预订数量（指定时间范围）
+     * @param hid
+     * @param rid
+     * @param rNumber
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    boolean updateRoomNumber(Integer hid, Integer rid, Integer rNumber, Date beginTime, Date endTime);
 }
