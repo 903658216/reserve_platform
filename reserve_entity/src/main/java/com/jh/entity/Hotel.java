@@ -104,6 +104,10 @@ public class Hotel implements Serializable {
   @ScriptedField
   private double distance;
 
+  @TableField(exist = false)
+  @Field(type = FieldType.Long)
+  private  Integer djl = 0;
+
   public Hotel setLon(Double lon) {
     this.lon = lon;
     this.myLocation[0] = lon;

@@ -8,7 +8,11 @@ import com.jh.feign.HotelFeign;
 import com.jh.service.ISearchService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.sort.*;
@@ -399,6 +403,10 @@ public class SearchServiceImpl implements ISearchService {
         //总查询
         BoostingQueryBuilder execQuery = QueryBuilders.boostingQuery(hotelQuery,cityQuery).negativeBoost(10);
 
+        //加上点击率的评分机制，将原本的总查询语句嵌套到该评分查询机制
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery(execQuery, ScoreFunctionBuilders.fieldValueFactorFunction("djl").setWeight(1f))
+                .scoreMode(FunctionScoreQuery.ScoreMode.SUM)
+                .boostMode(CombineFunction.MULTIPLY);
         //===================================
         //计算符合上述查询的平均价格
         String script = " double avgPirce = Integer.MAX_VALUE;\n" +
@@ -475,10 +483,12 @@ public class SearchServiceImpl implements ISearchService {
             case 3:
                 //按照距离排序
                 GeoDistanceSortBuilder geoDistanceSortBuilder = SortBuilders.geoDistanceSort("myLocation",searchInfo.getLat(),searchInfo.getLon()).order(SortOrder.ASC);
+                sortBuilders.add(geoDistanceSortBuilder);
                 break;
         }
         //执行查询
-        List<Hotel> hotelList = search(execQuery, sortBuilders,avgPrice, distance);
+        List<Hotel> hotelList = search(functionScoreQueryBuilder, sortBuilders,avgPrice, distance);
+//        List<Hotel> hotelList = search(execQuery, sortBuilders,avgPrice, distance);
 
         System.out.println("查询的结果为："+hotelList);
         //        search();
@@ -519,5 +529,26 @@ public class SearchServiceImpl implements ISearchService {
 
         return true;
 
+    }
+
+
+    /**
+     * 更新ES中酒店的点击率
+     * @param hid
+     * @param djl
+     */
+    @Override
+    public void updateDjl(Integer hid, Integer djl) {
+
+        Map<String,Object> params = new HashMap<>();
+        params.put("djl",djl);
+
+        UpdateQuery updateQuery = UpdateQuery.builder(hid + "")
+                .withScript("ctx._source.djl += params.djl")
+                .withParams(params)
+                .build();
+
+        //TODO 更新ES中的酒店点击率事件
+        restTemplate.update(updateQuery,IndexCoordinates.of("hotel_index"));
     }
 }

@@ -1,8 +1,11 @@
 package com.jh.controller;
 
 
+import com.jh.bloom.BloomUtil;
 import com.jh.entity.Hotel;
 import com.jh.entity.ResultData;
+import com.jh.event.constant.EventConstant;
+import com.jh.event.util.EventUtil;
 import com.jh.service.IHotelService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,12 @@ public class HotelController {
 
     @Autowired
     private IHotelService iHotelService;
+
+    @Autowired
+    private EventUtil eventUtil;
+
+    @Autowired
+    private BloomUtil bloomUtil;
 
 
     /**
@@ -66,9 +75,37 @@ public class HotelController {
     @RequestMapping("/getHotelById")
     ResultData<Hotel> getHotelById(Integer hid){
 
+        //查询酒店信息
         Hotel hotel = iHotelService.getById(hid);
         return new  ResultData<Hotel>().setData(hotel);
     }
+
+     /**
+     * 根据编号查询酒店信息(点击率计算)
+     * @param hid
+     * @return
+     */
+    @RequestMapping("/getHotelById1")
+    ResultData<Hotel> getHotelById1(Integer hid,String devId){
+
+        //查询酒店信息
+        Hotel hotel = iHotelService.getById(hid);
+        //TODO 每当根据酒店编号查询一次酒店信息，算一次点击率
+        if (!bloomUtil.isExists("djl",devId+"-"+hid)){
+            //之前为未点击过，算一次点击率
+            System.out.println(devId + "-" + hid + "算一次点击率");
+            //发布点击酒店事件
+            eventUtil.publishEvent(EventConstant.EVENT_HOTEL_CLICK,hotel);
+            //不存在，就添加一次
+            bloomUtil.addBloom("djl",devId+"-"+hid);
+        }else {
+            System.out.println(devId+ "-"+ hid +"已经点击过了");
+        }
+
+        return new  ResultData<Hotel>().setData(hotel);
+    }
+
+
 
     /**
      * 根据酒店编号修改酒店信息

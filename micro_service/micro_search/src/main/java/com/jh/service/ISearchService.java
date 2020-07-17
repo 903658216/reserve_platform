@@ -103,4 +103,11 @@ public interface ISearchService {
      * @return
      */
     boolean updateRoomNumber(Integer hid, Integer rid, Integer rNumber, Date beginTime, Date endTime);
+
+    /**
+     * 更新ES中酒店的点击率
+     * @param hid
+     * @param djl
+     */
+    void updateDjl(Integer hid, Integer djl);
 }
