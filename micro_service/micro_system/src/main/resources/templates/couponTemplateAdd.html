@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base th:href="${#request.getContextPath() +'/'}" />
+    <meta charset="UTF-8">
+    <title>新增优惠券模本</title>
+    <script src="resources/scripts/jquery-1.8.3.min.js"></script>
+    <script src="resources/scripts/dynamic-form.js"></script>
+
+</head>
+<body>
+
+    <h1>新增优惠券模板</h1>
+    <form id="formId" action="/system/insetCouponTemplate">
+
+        模板名称：<input name="tname" /><br/>
+        模板类型：
+            <input type="radio" name="templateType" value="0" checked="checked" />规则模板
+            <input type="radio" name="templateType" value="1"  />限制模板<br/>
+        模板对应的实体类：
+            <input type="text" name="templateClass" /><br/>
+        模板动态字段：
+            <input id="templateDynamic" type="hidden" name="templateDynamic" />
+
+        <div id="dynamic_div"></div>
+        <button type="button" onclick="addDynamicField();">新增动态字段</button>
+
+        <br/>
+        <br/>
+        <br/>
+        <button type="button" onclick="submitTemplate();">提交</button>
+
+    </form>
+
+</body>
+</html>

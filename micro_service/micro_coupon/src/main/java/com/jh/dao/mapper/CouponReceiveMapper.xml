@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jh.dao.CouponReceiveMapper">
+
+    <select id="getCouponByUser" resultType="com.jh.entity.Coupon">
+        select * from coupon c join coupon_receive cr on c.id = cr.cid
+            where cr.uid = #{uid}
+    </select>
+
+
+</mapper>

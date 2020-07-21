@@ -3,6 +3,6 @@ spring:
     url: jdbc:mysql:///platform?serverTimezone=GMT%2B8&zeroDateTimeBehavior=convertToNull
     username: root
     password: 123
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis-plus:
     mapper-locations: classpath:com/jh/dao/mapper/*.xml

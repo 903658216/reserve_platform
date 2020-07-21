@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 设置当前页面所有请求的根路径 -->
+    <base th:href="${#request.getContextPath() + '/'}"/>
+    <meta charset="UTF-8">
+    <title>字典管理</title>
+</head>
+<body>
+
+    <h1>字典管理</h1>
+    <a href="/system/toDictionariesAdd">添加字典</a>
+
+    <table border="1" style="width: 100%">
+        <tr>
+            <td>编号</td>
+            <td>字典名称</td>
+            <td>可用状态</td>
+            <td>字典数据</td>
+            <td>操作</td>
+        </tr>
+        <tr th:each="dic : ${dictionariesList}" >
+            <td th:text="${dic.id}">编号</td>
+            <td th:text="${dic.name}">字典名称</td>
+            <td th:text="${dic.status == 0 ? '可用':'禁用'}">可用状态</td>
+            <td >
+                <div th:each="content:${dic.dictionariesContents}" th:text="${content.name+ '-' + content.value}">
+
+                </div>
+            </td>
+            <td >
+                <a th:href="|/system/toDictionariesContentAdd?did=${dic.id}|">新增字典数据</a>
+                <!-- 未做 -->
+                <a th:href="|/system/deleteDictionariesById?id=${dic.id}|">删除字典</a>
+            </td>
+        </tr>
+
+    </table>
+
+
+
+</body>
+</html>

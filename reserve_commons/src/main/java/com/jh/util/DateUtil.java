@@ -37,4 +37,18 @@ public class DateUtil {
 
         return end-start;
     }
+
+
+    /**
+     * 将date日期转换成指定格式的字符串
+     * @param date
+     * @param pattern
+     * @return
+     */
+    public static  String dateFormatToString(Date date,String pattern){
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+        return  simpleDateFormat.format(date);
+    }
 }

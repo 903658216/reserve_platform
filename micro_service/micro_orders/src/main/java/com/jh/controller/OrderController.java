@@ -9,6 +9,7 @@ import com.jh.login.IsLogin;
 import com.jh.service.IOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,7 +52,20 @@ public class OrderController {
      */
     @RequestMapping("/getOrderPrice")
     public ResultData<OrderPriceResult> getOrderPrice(OrderPriceParams orderPriceParams){
-        System.out.println("请求计算价格");
+        System.out.println("请求计算价格"+orderPriceParams);
+        OrderPriceResult orderPriceResult = iOrderService.getOrderPrice(orderPriceParams);
+
+        return new ResultData<OrderPriceResult>().setData(orderPriceResult);
+    }
+
+    /**
+     * 计算订单的价格展示预计订单的详情
+     * @param orderPriceParams 请求订单计算的对象
+     * @return ResultData<OrderPriceResult>
+     */
+    @RequestMapping("/getOrderPriceFeign")
+    public ResultData<OrderPriceResult> getOrderPriceFeign(@RequestBody OrderPriceParams orderPriceParams){
+        System.out.println("请求计算价格Feign=="+orderPriceParams);
         OrderPriceResult orderPriceResult = iOrderService.getOrderPrice(orderPriceParams);
 
         return new ResultData<OrderPriceResult>().setData(orderPriceResult);

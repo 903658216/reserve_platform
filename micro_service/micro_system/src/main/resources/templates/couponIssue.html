@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base th:href="${#request.getContextPath() + '/'}"/>
+    <meta charset="UTF-8">
+    <title>优惠券发布页面</title>
+    <script src="resources/scripts/jquery-1.8.3.min.js"></script>
+
+    <!--时间控件-->
+    <script src="/resources/widget/My97DatePicker/WdatePicker.js"></script>
+
+    <script>
+
+        //发布类型触发
+        function updateMethod(type) {
+            console.log("updateMethod");
+            if (type == 0){
+                $("#timeDiv").hide();
+            }else {
+                $("#timeDiv").show();
+            }
+        }
+
+        //有效类型触发
+        function updateType(type) {
+            console.log("updateType");
+            if (type == 0){
+                $("#scopDiv1").show();
+                $("#scopDiv2").hide();
+
+            }else {
+                $("#scopDiv2").show();
+                $("#scopDiv1").hide();
+            }
+        }
+
+    </script>
+
+
+
+</head>
+<body>
+    <h1>优惠券发布</h1>
+    <form action="/system/addCouponIssue" method="post">
+        <!-- 隐藏域保存需要发布的优惠券id -->
+        <input  type="hidden" name="cid" th:value="${#request.getParameter('cid')}"/>
+
+        发布类型：<select name="method"  onchange="updateMethod(this.value)">
+                        <option> -- 请选择 --</option>
+                        <option value="0">领券中心</option>
+                        <option value="1">定时抢购</option>
+                </select><br/>
+        <div id="timeDiv" style="display: none;margin-top: 5px;">
+            定时抢购的开始时间：<input  type="text" name="goStartTime" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss', minDate:'%y-%M-%d {%H+1}:00:00'})" class="Wdate" onautocomplete="off"/><br/>
+            定时抢购的结束时间：<input  type="text" name="goStopTime" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss', minDate:'%y-%M-%d {%H+1}:00:00'})" class="Wdate" onautocomplete="off"/><br/>
+        </div>
+
+        有效类型：<select name="type" onchange="updateType(this.value);">
+                    <option>--请选择--</option>
+                    <option value="0">时间范围有效</option>
+                    <option value="1">领取时效</option>
+                </select><br/>
+
+        <div id="scopDiv1" style="display: none;margin-top: 5px;">
+            有效开始时间：<input type="text" name="beginTime" onclick="WdatePicker()" class="Wdate" /><br/>
+            有效结束时间：<input type="text" name="endTime" onclick="WdatePicker()" class="Wdate" /><br/>
+        </div>
+        <div id="scopDiv2" style="display: none; margin-top: 5px">
+            有效天数：<input type="text" name="days" /><br/>
+        </div>
+
+        发行数量：<input  name="number" type="text" /><span style="color: #8b0000;font-weight: 900;">* -1代表无上限</span><br/>
+        <button  type="submit">发布</button>
+
+
+    </form>
+
+</body>
+</html>

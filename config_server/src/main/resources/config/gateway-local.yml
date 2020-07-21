@@ -30,3 +30,11 @@ spring:
           uri: lb://micro-order
           predicates:
             - Path=/order/**,/pay/**
+        - id: coupon
+          uri: lb://micro-coupon
+          predicates:
+            - Path=/coupon/**,/couponTemplate/**,/couponDictionaries/**
+        - id: qiangquan
+          uri: lb://micro-qiangquan
+          predicates:
+            - Path=/qiangquan/**

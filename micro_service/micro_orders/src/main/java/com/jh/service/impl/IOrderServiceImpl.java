@@ -5,6 +5,7 @@ import com.jh.dao.OrdersMapper;
 import com.jh.entity.*;
 import com.jh.event.constant.EventConstant;
 import com.jh.event.util.EventUtil;
+import com.jh.feign.CouponFeign;
 import com.jh.feign.HotelFeign;
 import com.jh.lock.LockUtil;
 import com.jh.login.UserUtil;
@@ -38,6 +39,9 @@ public class IOrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
     @Autowired
     private EventUtil eventUtil;
+
+    @Autowired
+    private CouponFeign couponFeign;
 
 
 
@@ -81,6 +85,37 @@ public class IOrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
         allPrice = allPrice.multiply(BigDecimal.valueOf(orderPriceParams.getRNumber()));
 
+
+
+        // TODO 通过优惠券cid获得优惠券对象,然后计算优惠后的价格
+        if (orderPriceParams.getCid() != null && orderPriceParams.getCid() != -1){
+
+            System.out.println("计算订单价格的优惠券编号"+orderPriceParams.getCid());
+
+            Coupon coupon = couponFeign.getCouponById(orderPriceParams.getCid()).getData();
+            //1、查询到优惠券对象，进行优惠券的规则校验
+            //2、存在该优惠券，并且满足该优惠券的使用规则
+            if (coupon != null && coupon.getILimit().hasLimit(orderPriceParams) && coupon.getIRule().hasCouponPrice(allPrice.doubleValue())){
+                //可以使用该优惠券
+                //计算使用该优惠券后的价格
+                double couponCalculate = coupon.getIRule().couponCalculate(allPrice.doubleValue());
+
+                //计算优惠了多少钱
+                double conponPrice = coupon.getIRule().conponPrice(allPrice.doubleValue());
+
+                //将优惠后的价格替换成总价格
+                allPrice = BigDecimal.valueOf(couponCalculate);
+
+                List<String> list = new ArrayList<>();
+                list.add("使用优惠券");
+                list.add("-"+conponPrice);
+                priceDetail.add(list);
+
+            }
+
+
+        }
+
         OrderPriceResult orderPriceResult = new OrderPriceResult()
                 .setAllPrice(allPrice.doubleValue())
                 .setPriceDetails(priceDetail);
@@ -108,6 +143,7 @@ public class IOrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
             //进行订单的价格计算
             OrderPriceResult orderPrice = getOrderPrice(orderPriceParams);
+            System.out.println("===>"+ orderPriceParams +"下订单的总金额"+orderPrice.getAllPrice());
 
             orders.setOid(UUID.randomUUID().toString().replace("-",""))
                     .setAllPrice(orderPrice.getAllPrice())

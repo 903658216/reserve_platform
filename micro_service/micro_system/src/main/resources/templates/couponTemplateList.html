@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 设置当前页面所有请求的根路径 -->
+    <base th:href="${#request.getContextPath() + '/'}"/>
+    <meta charset="UTF-8">
+    <title>优惠券模本列表</title>
+</head>
+<body>
+    <h1>优惠券模本管理</h1>
+    <a href="/system/toCouponTemplateAdd">新增模板</a>
+    <table border="1" style="width: 100%">
+        <tr>
+            <td>编号</td>
+            <td>模板的名称</td>
+            <td>模板的实现类</td>
+            <td>模板类型</td>
+            <td>模板的动态字段</td>
+            <td>操作</td>
+        </tr>
+        <tr th:each="template : ${couponTemplateList}">
+            <td th:text="${template.id}">编号</td>
+            <td th:text="${template.tname}">模板的名称</td>
+            <td th:text="${template.templateClass}">模板的实现类</td>
+            <td th:text="${template.templateType == 0? '规则模板':'限制模板'}">模板类型</td>
+            <td th:text="${template.templateDynamic}">模板的动态字段</td>
+            <td>
+                <a th:href="|/system/deleteCouponTemplateById?id=${template.id}|">删除模板</a>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jh.dao.CouponIssueMapper">
+
+    <!-- 实体类的映射集合 -->
+    <resultMap id="couponMap" type="com.jh.entity.Coupon">
+        <id column="id" property="id"></id>
+        <result column="subject" property="subject"></result>
+        <result column="subtitle" property="subtitle"></result>
+        <result column="content" property="content"></result>
+        <result column="rule_info" property="ruleInfo"></result>
+        <result column="limit_info" property="limitInfo"></result>
+        <result column="utype" property="utype"></result>
+        <result column="priority" property="priority"></result>
+        <result column="create_time" property="createTime"></result>
+        <result column="status" property="status"></result>
+        <result column="receiveCount" property="receiveCount"></result>
+
+        <!-- 关联查询 - 对一 -->
+        <association property="couponIssue" javaType="com.jh.entity.CouponIssue">
+            <id column="ciid" property="id"></id>
+            <result column="cid" property="cid"></result>
+            <result column="method" property="method"></result>
+            <result column="type" property="type"></result>
+            <result column="begin_time" property="beginTime"></result>
+            <result column="end_time" property="endTime"></result>
+            <result column="days" property="days"></result>
+            <result column="number" property="number"></result>
+            <result column="go_start_time" property="goStartTime"></result>
+            <result column="go_stop_time" property="goStopTime"></result>
+        </association>
+
+    </resultMap>
+
+
+    <select id="getCouponIssueByType" resultMap="couponMap">
+      select *, ci.id as ciid, (select count(*) from coupon_receive where cid = c.id and uid = #{uid}) as receiveCount from
+        coupon c join coupon_issue ci on c.id = ci.cid
+        where ci.method = #{method}
+    </select>
+
+    <select id="getCouponIssueByTime" resultType="com.jh.entity.Coupon">
+         select *, ci.id as ciid from
+            coupon c join coupon_issue ci on c.id = ci.cid
+            where ci.method = #{method} and ci.go_start_time = #{beginTime}
+    </select>
+</mapper>

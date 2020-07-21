@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 设置当前页面所有请求的根路径 -->
+    <base th:href="${#request.getContextPath() + '/'}"/>
+    <meta charset="UTF-8">
+    <title>新增字典页面</title>
+</head>
+<body>
+    <h1>新增字典</h1>
+    <form action="/system/insertDictionaries" method="post">
+        字典名称:<input  name="name"/><br/>
+        <button type="submit">提交</button>
+    </form>
+
+</body>
+</html>

@@ -24,6 +24,10 @@ public class OrderPriceParams  implements Serializable {
     private  Date endTime;
     private Integer rNumber;
 
+    /**
+     * 优惠券编号
+     */
+    private Integer cid;
 
 }
 

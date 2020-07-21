@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base th:href="${#request.getContextPath() + '/'}"/>
+    <meta charset="UTF-8">
+    <title>添加优惠券</title>
+    <script src="resources/scripts/jquery-1.8.3.min.js"></script>
+    <script src="/resources/scripts/dynamic-form.js"></script>
+
+    <script>
+
+        $(function () {
+            //动态的请求规则模板和限制模板
+            getTemplate();
+        });
+    </script>
+</head>
+<body>
+    <h1>新增优惠券</h1>
+
+    <form action="/system/addCoupon" method="post" id="formId">
+        优惠券标题：<input name="subject" /><br/>
+        优惠券副标题：<input name="subtitle" /><br/>
+        互斥类型：<input name="utype" type="radio" value="0" checked="checked"/>互斥券
+                <input name="utype" type="radio" value="1"/>叠加券<br/>
+        优先级(叠加券有效)：<input name="priority" /><br/>
+        使用说明：<textarea th:cols="25" th:rows="5" name="content"></textarea>
+        <hr/>
+        选择规则模板:
+        <input type="hidden" id="ruleClass" />
+        <input type="hidden" id="ruleInfo" name="ruleInfo"/>
+        <div id="rule_div"></div>
+        <div id="rule_field_div"></div>
+
+        <hr/>
+        选择限制模板：
+        <input type="hidden" id="limitClass" />
+        <input type="hidden" id="limitInfo" name="limitInfo"/>
+        <div id="limit_div"></div>
+        <div id="limit_field_div"></div>
+        <hr/>
+<!--        <button type="button" >提交</button>-->
+        <button type="button" onclick="submitCoupon()" >提交</button>
+    </form>
+</body>
+</html>

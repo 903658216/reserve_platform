@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 设置当前页面所有请求的根路径 -->
+    <base th:href="${#request.getContextPath() + '/'}"/>
+    <meta charset="UTF-8">
+    <title>优惠券列表</title>
+</head>
+<body>
+
+    <h1>优惠券管理</h1>
+    <a href="/system/toCouponAdd">新增优惠券</a><br/><br/>
+
+    <table border="1" style="width: 100%">
+        <tr>
+            <td>编号</td>
+            <td>优惠券标题</td>
+            <td>副标题</td>
+            <td>互斥类型</td>
+            <td>说明</td>
+            <td>动态规则</td>
+            <td>动态限制</td>
+            <td>操作</td>
+        </tr>
+        <tr th:each="coupon :${couponList}">
+            <td th:text="${coupon.id}">编号</td>
+            <td th:text="${coupon.subject}">优惠券标题</td>
+            <td th:text="${coupon.subtitle}">副标题</td>
+            <td th:text="${coupon.utype == 0 ? '互斥券':'叠加券' }">互斥类型</td>
+            <td th:text="${coupon.content}">说明</td>
+            <td th:text="${coupon.ruleInfo}">动态规则</td>
+            <td th:text="${coupon.limitInfo}">动态限制</td>
+            <td>
+                <a th:href="|/system/toCouponIssue?cid=${coupon.id}|">发布优惠券</a>
+                <a th:href="|/system/deleteCouponByCid?cid=${coupon.id}|">删除优惠券</a>
+            </td>
+        </tr>
+    </table>
+
+
+</body>
+</html>
